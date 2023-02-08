@@ -126,3 +126,17 @@ test('compare $not', (t) => {
   t.true(compare({ name: 'cqqq' }));
   t.false(compare({ name: 'cqq' }));
 });
+
+test('compare sub', (t) => {
+  const compare = match({
+    'cqq.name': 'quan',
+    'cqq.age': {
+      $eq: 30,
+    },
+  });
+  t.true(compare({ cqq: { name: 'quan', age: 30 } }));
+  t.false(compare({ cqq: { name: 'quanc', age: 30 } }));
+  t.false(compare({ cqq: { name: 'quan', age: 31 } }));
+  t.false(compare({ cqq: { name: 'quan' } }));
+  t.false(compare({ cqq: { age: 30 } }));
+});

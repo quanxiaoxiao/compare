@@ -41,6 +41,9 @@ export default (express) => {
     if (!_.isPlainObject(obj)) {
       return false;
     }
-    return logicList.some((and) => and.every((expressItem) => expressItem.match(obj[expressItem.dataKey])));
+    return logicList.some((and) => and.every((expressItem) => {
+      const dataValue = _.get(obj, expressItem.dataKey);
+      return expressItem.match(dataValue);
+    }));
   };
 };
