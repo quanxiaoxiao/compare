@@ -133,15 +133,6 @@ const oneOf = Object.keys(ops).map((opName) => ({
   additionalProperties: false,
 }));
 
-const schema = {
-  type: 'array',
-  items: {
-    type: 'object',
-    oneOf,
-  },
-  minItems: 1,
-};
-
 const generateCompare = (opName, valueMatch, dataKey) => {
   const opItem = ops[opName];
   if (!opItem) {
@@ -158,15 +149,19 @@ const generateCompare = (opName, valueMatch, dataKey) => {
   }
   return opItem.fn(valueMatch[opName]);
 };
+const validateOpList = (new Ajv({ strict: false })).compile({
+  type: 'array',
+  items: {
+    type: 'object',
+    oneOf,
+  },
+  minItems: 1,
+});
 
 const generateOpMatch = (opName, valueMatch, dataKey) => {
   if (opName === '$and' || opName === '$or') {
-    const ajv = new Ajv({
-      strict: false,
-    });
-    const validate = ajv.compile(schema);
-    if (!validate(valueMatch[opName])) {
-      throw new Error(`\`${dataKey}\` invalid op, \`${JSON.stringify(validate.errors)}\``);
+    if (!validateOpList(valueMatch[opName])) {
+      throw new Error(`\`${dataKey}\` invalid op, \`${JSON.stringify(validateOpList.errors)}\``);
     }
     const compareList = [];
     for (let i = 0; i < valueMatch[opName].length; i++) {
@@ -186,6 +181,33 @@ const generateOpMatch = (opName, valueMatch, dataKey) => {
   return (d) => compare(d);
 };
 
+const validateOp = (new Ajv({ strict: false })).compile({
+  type: 'object',
+  properties: {
+    ...oneOf.reduce((acc, schemaItem) => ({
+      ...acc,
+      ...schemaItem.properties,
+    }), {}),
+    $and: {
+      type: 'array',
+      items: {
+        type: 'object',
+        oneOf,
+      },
+      minItems: 1,
+    },
+    $or: {
+      type: 'array',
+      items: {
+        type: 'object',
+        oneOf,
+      },
+      minItems: 1,
+    },
+  },
+  additionalProperties: false,
+});
+
 const generateLogics = (obj) => {
   const and = [];
   const dataKeys = Object.keys(obj);
@@ -199,28 +221,15 @@ const generateLogics = (obj) => {
       }
       const opName = opNames[0];
       if (opName === '$not') {
-        if (_.isEmpty(valueMatch.$not)) {
-          continue;
+        if (!validateOp(valueMatch.$not)) {
+          throw new Error(`$not \`${dataKey}\` invalid op, \`${JSON.stringify(validateOp.errors)}\``);
         }
-        const ajv = new Ajv({
-          strict: false,
-        });
-        const validate = ajv.compile({
-          type: 'object',
-          properties: {
-            ...oneOf.reduce((acc, schemaItem) => ({
-              ...acc,
-              ...schemaItem.properties,
-            }), {}),
-            $and: schema,
-            $or: schema,
-          },
-          additionalProperties: false,
-        });
-        if (!validate(valueMatch.$not)) {
-          throw new Error(`$not \`${dataKey}\` invalid op, \`${JSON.stringify(validate.errors)}\``);
-        }
-        const compare = generateOpMatch(Object.keys(valueMatch.$not)[0], valueMatch.$not, dataKey);
+        const _opName = Object.keys(valueMatch.$not)[0];
+        const compare = generateOpMatch(
+          _opName,
+          valueMatch.$not,
+          dataKey,
+        );
         if (compare) {
           and.push({
             dataKey,
@@ -228,7 +237,14 @@ const generateLogics = (obj) => {
           });
         }
       } else {
-        const opMatch = generateOpMatch(opName, valueMatch, dataKey);
+        if (!validateOp(valueMatch)) {
+          throw new Error(`$not \`${dataKey}\` invalid op, \`${JSON.stringify(validateOp.errors)}\``);
+        }
+        const opMatch = generateOpMatch(
+          opName,
+          valueMatch,
+          dataKey,
+        );
         if (opMatch) {
           and.push({
             dataKey,
@@ -237,9 +253,18 @@ const generateLogics = (obj) => {
         }
       }
     } else {
+      const type = typeof valueMatch;
+      if (type === 'object' && valueMatch != null) {
+        throw new Error(`\`${dataKey}\` express \`${JSON.stringify(valueMatch)}\` invalid`);
+      }
       and.push({
         dataKey,
-        match: (v) => v === valueMatch,
+        match: (v) => {
+          if (valueMatch == null) {
+            return v == null;
+          }
+          return v === valueMatch;
+        },
       });
     }
   }

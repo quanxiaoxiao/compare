@@ -2,28 +2,13 @@ import test from 'ava'; // eslint-disable-line
 import match from '../src/index.mjs';
 
 test('express', (t) => {
-  t.throws(() => {
-    match('aaa');
-  });
-  t.throws(() => {
-    match(1);
-  });
-  t.throws(() => {
-    match(['aa']);
-  });
-  t.throws(() => {
-    match([null]);
-  });
-  t.throws(() => {
-    match([{}, null]);
-  });
   t.is(typeof match([]), 'function');
   t.is(typeof match([{}]), 'function');
   t.is(typeof match({}), 'function');
 });
 
 test('compare $and', (t) => {
-  const compare = match({
+  let compare = match({
     name: 'cqq',
     age: 33,
   });
@@ -42,10 +27,78 @@ test('compare $and', (t) => {
     name: 'cqqq',
     age: 33,
   }));
+  compare = match({
+    name: null,
+  });
+  t.true(compare({ name: null }));
+  t.true(compare({}));
+  t.false(compare({ name: '' }));
+  compare = match({
+    age: {
+      $gt: 30,
+    },
+  });
+  t.true(compare({ age: 31 }));
+  t.false(compare({ age: 30 }));
+  t.false(compare({ age: 29 }));
+  compare = match({
+    age: {
+      $gte: 30,
+    },
+  });
+  t.true(compare({ age: 31 }));
+  t.true(compare({ age: 30 }));
+  t.false(compare({ age: 29 }));
+  compare = match({
+    age: {
+      $lt: 30,
+    },
+  });
+  t.false(compare({ age: 31 }));
+  t.false(compare({ age: 30 }));
+  t.true(compare({ age: 29 }));
+  compare = match({
+    age: {
+      $lte: 30,
+    },
+  });
+  t.false(compare({ age: 31 }));
+  t.true(compare({ age: 30 }));
+  t.true(compare({ age: 29 }));
+  t.throws(() => {
+    compare = match({
+      age: {
+        $lte: '30',
+      },
+    });
+  });
+  t.throws(() => {
+    compare = match({
+      age: [30, 40],
+    });
+  });
+  compare = match({
+    age: {
+      $and: [
+        {
+          $gt: 30,
+        },
+        {
+          $lt: 40,
+        },
+      ],
+    },
+  });
+  t.true(compare({ age: 31 }));
+  t.true(compare({ age: 39 }));
+  t.false(compare({ age: 30 }));
+  t.false(compare({ age: 29 }));
+  t.false(compare({ age: 40 }));
+  t.false(compare({ age: 41 }));
 });
 
 test('compare $or', (t) => {
-  const compare = match([{ name: 'cqq', age: 33 }, { name: 'cqqq', big: 'xxx' }, { foo: 'bar' }]);
+  let compare = match([{ name: 'cqq', age: 33 }, { name: 'cqqq', big: 'xxx' }, { foo: 'bar' }]);
   t.true(compare({
     big: 'xxx',
     name: 'cqq',
@@ -70,6 +123,22 @@ test('compare $or', (t) => {
     name: 'cqq',
     foo: 'bar',
   }));
+  compare = match({
+    age: {
+      $or: [
+        {
+          $gt: 40,
+        },
+        {
+          $lt: 30,
+        },
+      ],
+    },
+  });
+  t.true(compare({ age: 29 }));
+  t.false(compare({ age: 30 }));
+  t.false(compare({ age: 40 }));
+  t.true(compare({ age: 41 }));
 });
 
 test('compare $op', (t) => {
@@ -139,4 +208,51 @@ test('compare sub', (t) => {
   t.false(compare({ cqq: { name: 'quan', age: 31 } }));
   t.false(compare({ cqq: { name: 'quan' } }));
   t.false(compare({ cqq: { age: 30 } }));
+});
+
+test('invalid', (t) => {
+  t.throws(() => {
+    match('aaa');
+  });
+  t.throws(() => {
+    match(1);
+  });
+  t.throws(() => {
+    match(['aa']);
+  });
+  t.throws(() => {
+    match([null]);
+  });
+  t.throws(() => {
+    match([{}, null]);
+  });
+  t.throws(() => {
+    match({
+      name: {
+        $xx: 1,
+      },
+    });
+  });
+  t.throws(() => {
+    match({
+      name: {
+        $or: [],
+      },
+    });
+  });
+  t.throws(() => {
+    match({
+      name: {
+        $and: [],
+      },
+    });
+  });
+  t.throws(() => {
+    match({
+      name: {
+        $eq: 'quan',
+        $ne: 'cqq',
+      },
+    });
+  });
 });
