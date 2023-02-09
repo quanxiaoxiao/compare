@@ -5,6 +5,8 @@ test('express', (t) => {
   t.is(typeof match([]), 'function');
   t.is(typeof match([{}]), 'function');
   t.is(typeof match({}), 'function');
+  t.true(match([])({}));
+  t.true(match({})({}));
 });
 
 test('compare $and', (t) => {
