@@ -59,18 +59,9 @@ const ops = {
   $in: {
     schema: {
       type: 'array',
-      oneOf: [
-        {
-          items: {
-            type: 'number',
-          },
-        },
-        {
-          items: {
-            type: 'string',
-          },
-        },
-      ],
+      items: {
+        type: ['string', 'number', 'null'],
+      },
       minItems: 1,
       uniqueItems: true,
     },
@@ -79,18 +70,9 @@ const ops = {
   $nin: {
     schema: {
       type: 'array',
-      oneOf: [
-        {
-          items: {
-            type: 'number',
-          },
-        },
-        {
-          items: {
-            type: 'string',
-          },
-        },
-      ],
+      items: {
+        type: ['string', 'number', 'null'],
+      },
       minItems: 1,
       uniqueItems: true,
     },
@@ -238,7 +220,7 @@ const generateLogics = (obj) => {
         }
       } else {
         if (!validateOp(valueMatch)) {
-          throw new Error(`$not \`${dataKey}\` invalid op, \`${JSON.stringify(validateOp.errors)}\``);
+          throw new Error(`\`${dataKey}\` invalid op, \`${JSON.stringify(validateOp.errors)}\``);
         }
         const opMatch = generateOpMatch(
           opName,

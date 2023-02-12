@@ -187,7 +187,7 @@ test('compare $op', (t) => {
 });
 
 test('compare $not', (t) => {
-  const compare = match({
+  let compare = match({
     name: {
       $not: {
         $eq: 'cqq',
@@ -196,6 +196,36 @@ test('compare $not', (t) => {
   });
   t.true(compare({ name: 'cqqq' }));
   t.false(compare({ name: 'cqq' }));
+  compare = match({
+    name: {
+      $not: {
+        $in: ['', null],
+      },
+    },
+  });
+  t.true(compare({
+    name: 'aaa',
+  }));
+  t.false(compare({
+    name: '',
+  }));
+  t.false(compare({
+    name: null,
+  }));
+  compare = match({
+    name: {
+      $nin: ['', null],
+    },
+  });
+  t.true(compare({
+    name: 'aaa',
+  }));
+  t.false(compare({
+    name: '',
+  }));
+  t.false(compare({
+    name: null,
+  }));
 });
 
 test('compare sub', (t) => {
