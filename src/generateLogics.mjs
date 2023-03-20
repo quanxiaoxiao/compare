@@ -98,7 +98,7 @@ const ops = {
       let regexp;
       if (Array.isArray(a)) {
         const [pattern, flags] = a;
-        regexp = new RegExp(pattern, flags ?? '');
+        regexp = new RegExp(pattern, flags || '');
       } else {
         regexp = new RegExp(a);
       }
