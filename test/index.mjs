@@ -7,6 +7,16 @@ test('express', (t) => {
   t.is(typeof match({}), 'function');
   t.true(match([])({}));
   t.true(match({})({}));
+  t.false(match({
+    name: {
+      $nin: [null, ''],
+    },
+  })({}));
+  t.true(match({
+    name: {
+      $in: [null, ''],
+    },
+  })({}));
 });
 
 test('compare $and', (t) => {

@@ -65,7 +65,12 @@ const ops = {
       minItems: 1,
       uniqueItems: true,
     },
-    fn: (a) => (v) => a.includes(v),
+    fn: (a) => (v) => {
+      if (a.includes(null) && v == null) {
+        return true;
+      }
+      return a.includes(v);
+    },
   },
   $nin: {
     schema: {
@@ -76,7 +81,12 @@ const ops = {
       minItems: 1,
       uniqueItems: true,
     },
-    fn: (a) => (v) => !a.includes(v),
+    fn: (a) => (v) => {
+      if (a.includes(null) && v == null) {
+        return false;
+      }
+      return !a.includes(v);
+    },
   },
   $regex: {
     schema: {
