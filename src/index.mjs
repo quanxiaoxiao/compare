@@ -43,7 +43,7 @@ export default (express) => {
     }
     return logicList.some((and) => and.every((expressItem) => {
       const dataValue = _.get(obj, expressItem.dataKey);
-      return expressItem.match(dataValue);
+      return expressItem.match(dataValue, obj);
     }));
   };
 };

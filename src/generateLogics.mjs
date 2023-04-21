@@ -249,15 +249,28 @@ const generateLogics = (obj) => {
       if (type === 'object' && valueMatch != null) {
         throw new Error(`\`${dataKey}\` express \`${JSON.stringify(valueMatch)}\` invalid`);
       }
-      and.push({
-        dataKey,
-        match: (v) => {
-          if (valueMatch == null) {
-            return v == null;
-          }
-          return v === valueMatch;
-        },
-      });
+      if (type === 'string' && valueMatch[0] === '$') {
+        and.push({
+          dataKey,
+          match: (v, d) => {
+            const valueRef = _.get(d, valueMatch.slice(1));
+            if (valueRef == null) {
+              return v == null;
+            }
+            return v === _.get(d, valueMatch.slice(1));
+          },
+        });
+      } else {
+        and.push({
+          dataKey,
+          match: (v) => {
+            if (valueMatch == null) {
+              return v == null;
+            }
+            return v === valueMatch;
+          },
+        });
+      }
     }
   }
   return and;

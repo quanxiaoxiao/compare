@@ -19,6 +19,61 @@ test('express', (t) => {
   })({}));
 });
 
+test('compare ref', (t) => {
+  let compare = match({
+    name: {
+      $in: ['cqq', 'quan', 'aaa'],
+    },
+    foo: '$name',
+  });
+  t.false(compare({
+    name: 'cqq',
+    foo: 'xxx',
+  }));
+  t.true(compare({
+    name: 'cqq',
+    foo: 'cqq',
+  }));
+  t.false(compare({
+    name: 'quan',
+    foo: 'cqq',
+  }));
+  t.false(compare({
+    name: 'aaa',
+    foo: 'cqq',
+  }));
+  t.true(compare({
+    name: 'aaa',
+    foo: 'aaa',
+  }));
+  compare = match({
+    name: {
+      $in: ['cqq', null],
+    },
+    foo: '$name',
+  });
+  t.true(compare({
+  }));
+  t.false(compare({
+    name: 'quan',
+  }));
+  t.true(compare({
+    name: null,
+  }));
+  t.false(compare({
+    name: null,
+    foo: 'cqq',
+  }));
+  t.true(compare({
+    name: null,
+    foo: null,
+  }));
+  t.false(compare({
+    name: 'cqq',
+    foo: null,
+  }));
+});
+
 test('compare $and', (t) => {
   let compare = match({
     name: 'cqq',
