@@ -162,6 +162,32 @@ test('compare $and', (t) => {
   t.false(compare({ age: 29 }));
   t.false(compare({ age: 40 }));
   t.false(compare({ age: 41 }));
+  compare = match({
+    name: {
+      $and: [
+        {
+          $eq: 'quan',
+        },
+      ],
+    },
+  });
+  t.false(compare({ name: 'quan1' }));
+  t.true(compare({ name: 'quan' }));
+  compare = match({
+    name: {
+      $and: [
+        {
+          $ne: null,
+        },
+        {
+          $eq: '$big',
+        },
+      ],
+    },
+  });
+  t.false(compare({ name: 'quan1' }));
+  t.false(compare({ name: 'quan1', big: 'quan' }));
+  t.true(compare({ name: 'quan1', big: 'quan1' }));
 });
 
 test('compare $or', (t) => {

@@ -10,9 +10,16 @@ const ops = {
     schema: {
       type: normalTypes,
     },
-    fn: (a) => (v) => {
+    fn: (a) => (v, d) => {
       if (a == null) {
         return v != null;
+      }
+      if (typeof a === 'string' && a[0] === '$') {
+        const vv = _.get(d, a.slice(1));
+        if (vv == null) {
+          return v != null;
+        }
+        return v !== vv;
       }
       return v !== a;
     },
@@ -21,9 +28,16 @@ const ops = {
     schema: {
       type: normalTypes,
     },
-    fn: (a) => (v) => {
+    fn: (a) => (v, d) => {
       if (a == null) {
         return v == null;
+      }
+      if (typeof a === 'string' && a[0] === '$') {
+        const vv = _.get(d, a.slice(1));
+        if (vv == null) {
+          return v == null;
+        }
+        return v === vv;
       }
       return v === a;
     },
@@ -141,6 +155,7 @@ const generateCompare = (opName, valueMatch, dataKey) => {
   }
   return opItem.fn(valueMatch[opName]);
 };
+
 const validateOpList = (new Ajv({ strict: false })).compile({
   type: 'array',
   items: {
@@ -165,12 +180,12 @@ const generateOpMatch = (opName, valueMatch, dataKey) => {
       return null;
     }
     if (opName === '$and') {
-      return (d) => compareList.every((match) => match(d));
+      return (v, d) => compareList.every((match) => match(v, d));
     }
-    return (d) => compareList.some((match) => match(d));
+    return (v, d) => compareList.some((match) => match(v, d));
   }
   const compare = generateCompare(opName, valueMatch, dataKey);
-  return (d) => compare(d);
+  return (v, d) => compare(v, d);
 };
 
 const validateOp = (new Ajv({ strict: false })).compile({
@@ -249,28 +264,10 @@ const generateLogics = (obj) => {
       if (type === 'object' && valueMatch != null) {
         throw new Error(`\`${dataKey}\` express \`${JSON.stringify(valueMatch)}\` invalid`);
       }
-      if (type === 'string' && valueMatch[0] === '$') {
-        and.push({
-          dataKey,
-          match: (v, d) => {
-            const valueRef = _.get(d, valueMatch.slice(1));
-            if (valueRef == null) {
-              return v == null;
-            }
-            return v === _.get(d, valueMatch.slice(1));
-          },
-        });
-      } else {
-        and.push({
-          dataKey,
-          match: (v) => {
-            if (valueMatch == null) {
-              return v == null;
-            }
-            return v === valueMatch;
-          },
-        });
-      }
+      and.push({
+        dataKey,
+        match: ops.$eq.fn(valueMatch),
+      });
     }
   }
   return and;
