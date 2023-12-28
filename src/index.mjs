@@ -34,7 +34,7 @@ export default (express) => {
       logicList.push(and);
     }
   }
-  if (_.isEmpty(logicList)) {
+  if (logicList.length) {
     return () => true;
   }
   return (obj) => {
