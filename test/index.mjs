@@ -19,6 +19,70 @@ test('express', (t) => {
   })({}));
 });
 
+test('base', (t) => {
+  const data = {
+    name: 'quan',
+    age: 22,
+  };
+  t.true(match({})(data));
+  t.true(match({
+    name: 'quan',
+  })(data));
+  t.true(match({
+    name: {
+      $eq: 'quan',
+    },
+  })(data));
+  t.true(match({
+    name: {
+      $ne: 'rice',
+    },
+  })(data));
+  t.true(match({
+    name: {
+      $in: ['rice', 'quan'],
+    },
+  })(data));
+  t.true(match({
+    name: {
+      $regex: '^qu',
+    },
+  })(data));
+  t.false(match({
+    name: {
+      $regex: 'qur',
+    },
+  })(data));
+  t.true(match({
+    name: {
+      $nin: ['rice', 'quans'],
+    },
+  })(data));
+  t.true(match({
+    age: 22,
+  })(data));
+  t.true(match({
+    age: {
+      $gte: 22,
+    },
+  })(data));
+  t.true(match({
+    age: {
+      $lte: 22,
+    },
+  })(data));
+  t.true(match({
+    age: {
+      $lt: 23,
+    },
+  })(data));
+  t.true(match({
+    age: {
+      $gt: 21,
+    },
+  })(data));
+});
+
 test('compare ref', (t) => {
   let compare = match({
     name: {
