@@ -135,6 +135,7 @@ export default {
           type: 'string',
         },
         minItems: 1,
+        maxItems: 2,
       },
     },
     fn: (a) => {
@@ -145,7 +146,13 @@ export default {
       } else {
         regexp = new RegExp(a);
       }
-      return (v) => regexp.test(v);
+      return (v) => {
+        if (v == null) {
+          return false;
+        }
+        assert(typeof v === 'string');
+        return regexp.test(v);
+      };
     },
   },
 };
