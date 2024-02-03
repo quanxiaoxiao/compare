@@ -1,8 +1,6 @@
 import assert from 'node:assert';
 import _ from 'lodash';
 
-const normalTypes = ['number', 'string', 'boolean', 'null'];
-
 // '$nor',
 
 const eq = (a) => (v, d) => {
@@ -24,13 +22,13 @@ const isNotNumber = (n) => typeof n !== 'number';
 export default {
   $eq: {
     schema: {
-      type: normalTypes,
+      type: ['number', 'string', 'boolean', 'null'],
     },
     fn: eq,
   },
   $ne: {
     schema: {
-      type: normalTypes,
+      type: ['number', 'string', 'boolean', 'null'],
     },
     fn: (a) => (v, d) => {
       if (a == null) {
