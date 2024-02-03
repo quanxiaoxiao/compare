@@ -101,7 +101,20 @@ export default {
     schema: {
       type: 'array',
       items: {
-        type: ['string', 'number', 'null', 'boolean'],
+        anyOf: [
+          {
+            type: 'string',
+          },
+          {
+            type: 'number',
+          },
+          {
+            type: 'null',
+          },
+          {
+            type: 'boolean',
+          },
+        ],
       },
       minItems: 1,
       uniqueItems: true,
@@ -118,7 +131,20 @@ export default {
     schema: {
       type: 'array',
       items: {
-        type: ['string', 'number', 'null', 'boolean'],
+        anyOf: [
+          {
+            type: 'string',
+          },
+          {
+            type: 'number',
+          },
+          {
+            type: 'null',
+          },
+          {
+            type: 'boolean',
+          },
+        ],
       },
       minItems: 1,
       uniqueItems: true,
@@ -133,7 +159,14 @@ export default {
   },
   $regex: {
     schema: {
-      type: ['string', 'array'],
+      anyOf: [
+        {
+          type: 'string',
+        },
+        {
+          type: 'array',
+        },
+      ],
       if: {
         type: 'string',
       },

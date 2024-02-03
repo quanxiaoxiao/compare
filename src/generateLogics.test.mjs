@@ -104,6 +104,23 @@ test('generateLogics with object', () => {
   }), { name: 'quan', age: 22 }));
 });
 
+test('generateLogics with $in invalid', () => {
+  assert.throws(() => {
+    generateLogics({
+      name: {
+        $in: ['aa', 'aa'],
+      },
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: {
+        $in: [],
+      },
+    });
+  });
+});
+
 test('generateLogics with object express', () => {
   assert(validate(generateLogics({
     name: 'quan',
@@ -141,4 +158,65 @@ test('generateLogics with object express', () => {
       $ne: null,
     },
   }), { name: 'quan', age: 22 }));
+
+  assert(validate(generateLogics({
+    name: {
+      $in: ['quan', 'cqq', 'rice'],
+    },
+  }), { name: 'quan', age: 22 }));
+  assert(validate(generateLogics({
+    name: {
+      $in: ['quan', 'cqq', 'rice'],
+    },
+  }), { name: 'rice', age: 22 }));
+  assert(!validate(generateLogics({
+    name: {
+      $in: ['quan', 'cqq', 'rice'],
+    },
+  }), { name: 'big', age: 22 }));
+  assert(validate(generateLogics({
+    name: {
+      $in: ['quan', 22, true],
+    },
+  }), { name: 22 }));
+  assert(validate(generateLogics({
+    name: {
+      $in: ['quan', 22, true],
+    },
+  }), { name: true }));
+  assert(validate(generateLogics({
+    name: {
+      $in: ['', null],
+    },
+  }), { name: '' }));
+  assert(validate(generateLogics({
+    name: {
+      $in: ['', null],
+    },
+  }), {}));
+  assert(!validate(generateLogics({
+    name: {
+      $in: ['', null],
+    },
+  }), { name: 'quan' }));
+  assert(validate(generateLogics({
+    name: {
+      $nin: ['', null],
+    },
+  }), { name: 'quan' }));
+  assert(!validate(generateLogics({
+    name: {
+      $nin: ['', null],
+    },
+  }), {}));
+  assert(!validate(generateLogics({
+    name: {
+      $nin: ['', null],
+    },
+  }), { name: '' }));
+  assert(!validate(generateLogics({
+    name: {
+      $nin: ['', null],
+    },
+  }), { name: null }));
 });
