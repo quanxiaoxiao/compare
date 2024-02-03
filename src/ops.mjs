@@ -1,8 +1,6 @@
 import assert from 'node:assert';
 import _ from 'lodash';
 
-// '$nor',
-
 const eq = (a) => (v, d) => {
   if (a == null) {
     return v == null;

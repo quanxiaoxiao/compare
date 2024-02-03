@@ -9,7 +9,7 @@ const getOpName = (dataKey, express) => {
     throw new Error(`\`${dataKey}\` invalid op express, \`${JSON.stringify(express)}\``);
   }
   const opName = opNames[0];
-  if (opName === '$or' || opName === '$and') {
+  if (opName === '$or' || opName === '$and' || opName === '$nor') {
     return opName;
   }
   if (!ops[opName]) {
@@ -20,7 +20,7 @@ const getOpName = (dataKey, express) => {
 
 const generateMatch = (opName, dataKey, valueMatch) => {
   const valueCompare = valueMatch[opName];
-  if (opName === '$or' || opName === '$and') {
+  if (opName === '$or' || opName === '$and' || opName === '$nor') {
     if (!Array.isArray(valueCompare)) {
       throw new Error(`\`${dataKey}\` \`${opName}\` compare value is not array`);
     }
@@ -31,7 +31,7 @@ const generateMatch = (opName, dataKey, valueMatch) => {
     for (let i = 0; i < valueCompare.length; i++) {
       const express = valueCompare[i];
       const subOpName = getOpName(dataKey, express);
-      if (['$or', '$and'].includes(subOpName)) {
+      if (['$or', '$and', '$nor'].includes(subOpName)) {
         throw new Error(`\`${dataKey}\` \`${opName}\` sub op invalid`);
       }
       const subCompareValue = express[subOpName];
@@ -48,7 +48,10 @@ const generateMatch = (opName, dataKey, valueMatch) => {
         if (opName === '$and') {
           return arr.every((match) => match(v));
         }
-        return arr.some((match) => match(v));
+        if (opName === '$or') {
+          return arr.some((match) => match(v));
+        }
+        return !arr.some((match) => match(v));
       },
     };
   }
