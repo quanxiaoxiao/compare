@@ -18,8 +18,7 @@ const getOpName = (dataKey, express) => {
   return opName;
 };
 
-const generateMatch = (opName, dataKey, valueMatch) => {
-  const valueCompare = valueMatch[opName];
+const generateMatch = (dataKey, opName, valueCompare) => {
   if (opName === '$or' || opName === '$and' || opName === '$nor') {
     if (!Array.isArray(valueCompare)) {
       throw new Error(`\`${dataKey}\` \`${opName}\` compare value is not array`);
@@ -75,7 +74,7 @@ export default (express) => {
     const valueMatch = express[dataKey];
     if (_.isPlainObject(valueMatch)) {
       const opName = getOpName(dataKey, valueMatch);
-      result.push(generateMatch(opName, dataKey, valueMatch));
+      result.push(generateMatch(dataKey, opName, valueMatch[opName]));
     } else {
       if (valueMatch != null && !['number', 'string', 'boolean'].includes(typeof valueMatch)) {
         throw new Error(`\`${dataKey}\` value match \`${JSON.stringify(valueMatch)}\` invalid`);
