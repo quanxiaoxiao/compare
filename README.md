@@ -1,3 +1,22 @@
+通过表达式来匹配传入的数据是否匹配
+
+## Install
+
+```shell
+npm install @quanxiaoxiao/compare
+```
+
+## Usage
+
+```javascript
+import compare from '@quanxiaoxiao/compare';
+
+const match = compare({ name: 'test' });
+
+assert(match({ name: 'test' }));
+assert(!match({ name: 'quan' }));
+```
+
 ### Operations
 
 `$ne`, `$eq`, `$gt`, `$lt`, `$lte`, `$gte`, `$in`, `$nin`, `$regexp`

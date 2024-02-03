@@ -1,135 +1,7 @@
+import assert from 'node:assert';
 import Ajv from 'ajv';
 import _ from 'lodash';
-
-const normalTypes = ['number', 'string', 'boolean', 'null'];
-
-// '$nor',
-
-const ops = {
-  $ne: {
-    schema: {
-      type: normalTypes,
-    },
-    fn: (a) => (v, d) => {
-      if (a == null) {
-        return v != null;
-      }
-      if (typeof a === 'string' && a[0] === '$') {
-        const vv = _.get(d, a.slice(1));
-        if (vv == null) {
-          return v != null;
-        }
-        return v !== vv;
-      }
-      return v !== a;
-    },
-  },
-  $eq: {
-    schema: {
-      type: normalTypes,
-    },
-    fn: (a) => (v, d) => {
-      if (a == null) {
-        return v == null;
-      }
-      if (typeof a === 'string' && a[0] === '$') {
-        const vv = _.get(d, a.slice(1));
-        if (vv == null) {
-          return v == null;
-        }
-        return v === vv;
-      }
-      return v === a;
-    },
-  },
-  $gt: {
-    schema: {
-      type: 'number',
-      nullable: false,
-    },
-    fn: (a) => (v) => v > a,
-  },
-  $lt: {
-    schema: {
-      type: 'number',
-      nullable: false,
-    },
-    fn: (a) => (v) => v < a,
-  },
-  $lte: {
-    schema: {
-      type: 'number',
-      nullable: false,
-    },
-    fn: (a) => (v) => v === a || v < a,
-  },
-  $gte: {
-    schema: {
-      type: 'number',
-      nullable: false,
-    },
-    fn: (a) => (v) => v === a || v > a,
-  },
-  $in: {
-    schema: {
-      type: 'array',
-      items: {
-        type: ['string', 'number', 'null'],
-      },
-      minItems: 1,
-      uniqueItems: true,
-    },
-    fn: (a) => (v) => {
-      if (a.includes(null) && v == null) {
-        return true;
-      }
-      return a.includes(v);
-    },
-  },
-  $nin: {
-    schema: {
-      type: 'array',
-      items: {
-        type: ['string', 'number', 'null'],
-      },
-      minItems: 1,
-      uniqueItems: true,
-    },
-    fn: (a) => (v) => {
-      if (a.includes(null) && v == null) {
-        return false;
-      }
-      return !a.includes(v);
-    },
-  },
-  $regex: {
-    schema: {
-      type: ['string', 'array'],
-      if: {
-        type: 'string',
-      },
-      then: {
-        minLength: 1,
-      },
-      else: {
-        items: {
-          type: 'string',
-        },
-        minItems: 1,
-      },
-    },
-    fn: (a) => {
-      let regexp;
-      if (Array.isArray(a)) {
-        const [pattern, flags] = a;
-        regexp = new RegExp(pattern, flags || '');
-      } else {
-        regexp = new RegExp(a);
-      }
-      return (v) => regexp.test(v);
-    },
-  },
-};
+import ops from './ops.mjs';
 
 const oneOf = Object.keys(ops).map((opName) => ({
   properties: {
@@ -215,12 +87,13 @@ const validateOp = (new Ajv({ strict: false })).compile({
   additionalProperties: false,
 });
 
-const generateLogics = (obj) => {
-  const and = [];
-  const dataKeys = Object.keys(obj);
+export default (express) => {
+  assert(_.isPlainObject(express));
+  const every = [];
+  const dataKeys = Object.keys(express);
   for (let i = 0; i < dataKeys.length; i++) {
     const dataKey = dataKeys[i];
-    const valueMatch = obj[dataKey];
+    const valueMatch = express[dataKey];
     if (_.isPlainObject(valueMatch)) {
       const opNames = Object.keys(valueMatch);
       if (opNames.length !== 1) {
@@ -238,7 +111,7 @@ const generateLogics = (obj) => {
           dataKey,
         );
         if (compare) {
-          and.push({
+          every.push({
             dataKey,
             match: (d) => !compare(d),
           });
@@ -253,24 +126,22 @@ const generateLogics = (obj) => {
           dataKey,
         );
         if (opMatch) {
-          and.push({
+          every.push({
             dataKey,
             match: opMatch,
           });
         }
       }
     } else {
-      const type = typeof valueMatch;
-      if (type === 'object' && valueMatch != null) {
+      const valueMatchType = typeof valueMatch;
+      if (valueMatchType === 'object' && valueMatch != null || valueMatchType === 'function') {
         throw new Error(`\`${dataKey}\` express \`${JSON.stringify(valueMatch)}\` invalid`);
       }
-      and.push({
+      every.push({
         dataKey,
         match: ops.$eq.fn(valueMatch),
       });
     }
   }
-  return and;
+  return every;
 };
-
-export default generateLogics;
