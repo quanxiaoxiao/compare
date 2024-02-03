@@ -103,7 +103,7 @@ export default (express) => {
       if (!ops[opName]) {
         throw new Error(`\`${dataKey}\` invalid op with \`${opName}\``);
       }
-      if (opName === '$not' || opName === '$and') {
+      if (opName === '$not') {
         if (!validateOp(valueMatch.$not)) {
           throw new Error(`$not \`${dataKey}\` invalid op, \`${JSON.stringify(validateOp.errors)}\``);
         }
