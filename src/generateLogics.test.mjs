@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert';
+import _ from 'lodash';
 import generateLogics from './generateLogics.mjs';
 
-const validate = (every, obj) => every.every((d) => d.match(obj[d.dataKey]));
+const validate = (every, obj) => every.every((d) => d.match(_.get(obj, d.dataKey)));
 
 test('generateLogics check express', () => {
   assert.throws(() => {
@@ -240,4 +241,105 @@ test('generateLogics with object express', () => {
       $regex: ['^a([3-8])b', 'i'],
     },
   }), { name: 'A4b' }));
+});
+
+test('generateLogics with object $or', () => {
+  assert.throws(() => {
+    generateLogics({
+      name: {
+        $or: {},
+      },
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: {
+        $or: [],
+      },
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: {
+        $or: { $eq: 33 },
+      },
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: {
+        $or: [{}],
+      },
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: {
+        $or: [{ $eqs: 11 }],
+      },
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: {
+        $or: [{ $eq: 2, $ne: 3 }],
+      },
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: {
+        $or: [{ $eq: 2 }, { $nes: 33 }],
+      },
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: {
+        $or: [{ $or: [{ $eq: 44 }] }],
+      },
+    });
+  });
+  assert(validate(generateLogics({
+    age: {
+      $or: [
+        {
+          $eq: 33,
+        },
+      ],
+    },
+  }), { age: 33 }));
+  assert(!validate(generateLogics({
+    age: {
+      $or: [
+        {
+          $eq: 32,
+        },
+      ],
+    },
+  }), { age: 33 }));
+  assert(validate(generateLogics({
+    age: {
+      $or: [
+        {
+          $eq: 33,
+        },
+        {
+          $gt: 28,
+        },
+      ],
+    },
+  }), { age: 29 }));
+  assert(!validate(generateLogics({
+    age: {
+      $or: [
+        {
+          $eq: 33,
+        },
+        {
+          $gt: 27,
+        },
+      ],
+    },
+  }), { age: 25 }));
 });

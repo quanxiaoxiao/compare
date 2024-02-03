@@ -3,143 +3,85 @@ import Ajv from 'ajv';
 import _ from 'lodash';
 import ops from './ops.mjs';
 
-const oneOf = Object.keys(ops).map((opName) => ({
-  properties: {
-    [opName]: ops[opName].schema,
-  },
-  required: [opName],
-  additionalProperties: false,
-}));
-
-const generateCompare = (opName, valueMatch, dataKey) => {
-  const opItem = ops[opName];
-  if (!opItem) {
-    throw new Error(`\`${dataKey}\` invalid op \`${opName}\``);
+const getOpName = (dataKey, express) => {
+  const opNames = Object.keys(express);
+  if (opNames.length !== 1) {
+    throw new Error(`\`${dataKey}\` invalid op express, \`${JSON.stringify(express)}\``);
   }
-  if (opItem.schema) {
-    const ajv = new Ajv({
-      strict: false,
-    });
-    const validate = ajv.compile(opItem.schema);
-    if (!validate(valueMatch[opName])) {
-      throw new Error(`\`${dataKey}\` invalid op, \`${JSON.stringify(validate.errors)}\``);
-    }
+  const opName = opNames[0];
+  if (opName === '$or' || opName === '$and') {
+    return opName;
   }
-  return opItem.fn(valueMatch[opName]);
+  if (!ops[opName]) {
+    throw new Error(`\`${dataKey}\` invalid op with \`${opName}\``);
+  }
+  return opName;
 };
 
-const validateOpList = (new Ajv({ strict: false })).compile({
-  type: 'array',
-  items: {
-    type: 'object',
-    oneOf,
-  },
-  minItems: 1,
-});
-
-const generateOpMatch = (opName, valueMatch, dataKey) => {
-  if (opName === '$and' || opName === '$or') {
-    if (!validateOpList(valueMatch[opName])) {
-      throw new Error(`\`${dataKey}\` invalid op, \`${JSON.stringify(validateOpList.errors)}\``);
+const generateMatch = (opName, dataKey, valueMatch) => {
+  const valueCompare = valueMatch[opName];
+  if (opName === '$or' || opName === '$and') {
+    if (!Array.isArray(valueCompare)) {
+      throw new Error(`\`${dataKey}\` \`${opName}\` compare value is not array`);
     }
-    const compareList = [];
-    for (let i = 0; i < valueMatch[opName].length; i++) {
-      const matchItem = valueMatch[opName][i];
-      const compare = generateCompare(Object.keys(matchItem)[0], matchItem, dataKey);
-      compareList.push(compare);
+    if (valueCompare.length === 0) {
+      throw new Error(`\`${dataKey}\` \`${opName}\` compare value is empty`);
     }
-    if (_.isEmpty(compareList)) {
-      return null;
+    const arr = [];
+    for (let i = 0; i < valueCompare.length; i++) {
+      const express = valueCompare[i];
+      const subOpName = getOpName(dataKey, express);
+      if (['$or', '$and'].includes(subOpName)) {
+        throw new Error(`\`${dataKey}\` \`${opName}\` sub op invalid`);
+      }
+      const subCompareValue = express[subOpName];
+      const { schema, fn } = ops[subOpName];
+      const validateCompareValue = new Ajv().compile(schema);
+      if (!validateCompareValue(subCompareValue)) {
+        throw new Error(`\`${dataKey}\` \`${subOpName}\` compare value \`${JSON.stringify(subCompareValue)}\` invalid, \`${JSON.stringify(validateCompareValue.errors)}\``);
+      }
+      arr.push(fn(subCompareValue));
     }
-    if (opName === '$and') {
-      return (v, d) => compareList.every((match) => match(v, d));
-    }
-    return (v, d) => compareList.some((match) => match(v, d));
+    return {
+      dataKey,
+      match: (v) => {
+        if (opName === '$and') {
+          return arr.every((match) => match(v));
+        }
+        return arr.some((match) => match(v));
+      },
+    };
   }
-  const compare = generateCompare(opName, valueMatch, dataKey);
-  return (v, d) => compare(v, d);
+  const { schema, fn } = ops[opName];
+  const validateCompareValue = new Ajv().compile(schema);
+  if (!validateCompareValue(valueCompare)) {
+    throw new Error(`\`${dataKey}\`  compare value \`${JSON.stringify(valueCompare)}\` invalid, \`${JSON.stringify(validateCompareValue.errors)}\``);
+  }
+  return {
+    dataKey,
+    match: fn(valueCompare),
+  };
 };
-
-const validateOp = (new Ajv({ strict: false })).compile({
-  type: 'object',
-  properties: {
-    ...oneOf.reduce((acc, schemaItem) => ({
-      ...acc,
-      ...schemaItem.properties,
-    }), {}),
-    $and: {
-      type: 'array',
-      items: {
-        type: 'object',
-        oneOf,
-      },
-      minItems: 1,
-    },
-    $or: {
-      type: 'array',
-      items: {
-        type: 'object',
-        oneOf,
-      },
-      minItems: 1,
-    },
-  },
-  additionalProperties: false,
-});
 
 export default (express) => {
   assert(_.isPlainObject(express));
-  const every = [];
+  const result = [];
   const dataKeys = Object.keys(express);
   for (let i = 0; i < dataKeys.length; i++) {
     const dataKey = dataKeys[i];
     const valueMatch = express[dataKey];
     if (_.isPlainObject(valueMatch)) {
-      const opNames = Object.keys(valueMatch);
-      if (opNames.length !== 1) {
-        throw new Error(`\`${dataKey}\` invalid op express, \`${JSON.stringify(valueMatch)}\``);
-      }
-      const opName = opNames[0];
-      if (!ops[opName]) {
-        throw new Error(`\`${dataKey}\` invalid op with \`${opName}\``);
-      }
-      if (opName === '$not') {
-        if (!validateOp(valueMatch.$not)) {
-          throw new Error(`$not \`${dataKey}\` invalid op, \`${JSON.stringify(validateOp.errors)}\``);
-        }
-        const _opName = Object.keys(valueMatch.$not)[0];
-        const compare = generateOpMatch(
-          _opName,
-          valueMatch.$not,
-          dataKey,
-        );
-        if (compare) {
-          every.push({
-            dataKey,
-            match: (d) => !compare(d),
-          });
-        }
-      } else {
-        const { schema, fn } = ops[opName];
-        const validateCompareValue = new Ajv().compile(schema);
-        const valueCompare = valueMatch[opName];
-        if (!validateCompareValue(valueCompare)) {
-          throw new Error(`\`${dataKey}\` compare value invalid, \`${JSON.stringify(validateCompareValue.errors)}\``);
-        }
-        every.push({
-          dataKey,
-          match: fn(valueCompare),
-        });
-      }
+      const opName = getOpName(dataKey, valueMatch);
+      result.push(generateMatch(opName, dataKey, valueMatch));
     } else {
       if (valueMatch != null && !['number', 'string', 'boolean'].includes(typeof valueMatch)) {
         throw new Error(`\`${dataKey}\` value match \`${JSON.stringify(valueMatch)}\` invalid`);
       }
-      every.push({
+      result.push({
         dataKey,
         match: ops.$eq.fn(valueMatch),
       });
     }
   }
-  return every;
+  return result;
 };
