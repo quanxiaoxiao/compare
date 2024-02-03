@@ -97,10 +97,13 @@ export default (express) => {
     if (_.isPlainObject(valueMatch)) {
       const opNames = Object.keys(valueMatch);
       if (opNames.length !== 1) {
-        throw new Error(`\`${dataKey}\` invalid op, \`${JSON.stringify(valueMatch)}\``);
+        throw new Error(`\`${dataKey}\` invalid op express, \`${JSON.stringify(valueMatch)}\``);
       }
       const opName = opNames[0];
-      if (opName === '$not') {
+      if (!ops[opName]) {
+        throw new Error(`\`${dataKey}\` invalid op with \`${opName}\``);
+      }
+      if (opName === '$not' || opName === '$and') {
         if (!validateOp(valueMatch.$not)) {
           throw new Error(`$not \`${dataKey}\` invalid op, \`${JSON.stringify(validateOp.errors)}\``);
         }
@@ -117,25 +120,20 @@ export default (express) => {
           });
         }
       } else {
-        if (!validateOp(valueMatch)) {
-          throw new Error(`\`${dataKey}\` invalid op, \`${JSON.stringify(validateOp.errors)}\``);
+        const { schema, fn } = ops[opName];
+        const validateCompareValue = new Ajv().compile(schema);
+        const valueCompare = valueMatch[opName];
+        if (!validateCompareValue(valueCompare)) {
+          throw new Error(`\`${dataKey}\` compare value invalid, \`${JSON.stringify(validateCompareValue.errors)}\``);
         }
-        const opMatch = generateOpMatch(
-          opName,
-          valueMatch,
+        every.push({
           dataKey,
-        );
-        if (opMatch) {
-          every.push({
-            dataKey,
-            match: opMatch,
-          });
-        }
+          match: fn(valueCompare),
+        });
       }
     } else {
-      const valueMatchType = typeof valueMatch;
-      if (valueMatchType === 'object' && valueMatch != null || valueMatchType === 'function') {
-        throw new Error(`\`${dataKey}\` express \`${JSON.stringify(valueMatch)}\` invalid`);
+      if (valueMatch != null && !['number', 'string', 'boolean'].includes(typeof valueMatch)) {
+        throw new Error(`\`${dataKey}\` value match \`${JSON.stringify(valueMatch)}\` invalid`);
       }
       every.push({
         dataKey,

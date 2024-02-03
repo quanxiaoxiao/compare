@@ -14,7 +14,9 @@ test('ops $eq', () => {
   assert(!ops.$eq.fn(1.1)(1));
   assert(!ops.$eq.fn(1)('1'));
   assert(!ops.$eq.fn('1')(1));
+  assert(ops.$eq.fn('1')('1'));
   assert(!ops.$eq.fn(true)(false));
+  assert(ops.$eq.fn(false)(false));
   assert(!ops.$eq.fn(true)('true'));
 });
 

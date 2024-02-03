@@ -22,13 +22,25 @@ const isNotNumber = (n) => typeof n !== 'number';
 export default {
   $eq: {
     schema: {
-      type: ['number', 'string', 'boolean', 'null'],
+      anyOf: [
+        { type: 'number' },
+        { type: 'string' },
+        { type: 'boolean' },
+        { type: 'number' },
+        { type: 'null' },
+      ],
     },
     fn: eq,
   },
   $ne: {
     schema: {
-      type: ['number', 'string', 'boolean', 'null'],
+      anyOf: [
+        { type: 'number' },
+        { type: 'string' },
+        { type: 'boolean' },
+        { type: 'number' },
+        { type: 'null' },
+      ],
     },
     fn: (a) => (v, d) => {
       if (a == null) {
