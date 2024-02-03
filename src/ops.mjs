@@ -167,19 +167,6 @@ export default {
           type: 'array',
         },
       ],
-      if: {
-        type: 'string',
-      },
-      then: {
-        minLength: 1,
-      },
-      else: {
-        items: {
-          type: 'string',
-        },
-        minItems: 1,
-        maxItems: 2,
-      },
     },
     fn: (a) => {
       let regexp;
@@ -187,6 +174,7 @@ export default {
         const [pattern, flags] = a;
         regexp = new RegExp(pattern, flags || '');
       } else {
+        assert(a !== '');
         regexp = new RegExp(a);
       }
       return (v) => {

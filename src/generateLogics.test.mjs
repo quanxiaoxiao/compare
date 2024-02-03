@@ -219,4 +219,25 @@ test('generateLogics with object express', () => {
       $nin: ['', null],
     },
   }), { name: null }));
+
+  assert(validate(generateLogics({
+    name: {
+      $regex: '^a([3-8])b',
+    },
+  }), { name: 'a4b' }));
+  assert(!validate(generateLogics({
+    name: {
+      $regex: '^a([3-8])b',
+    },
+  }), { name: 'a2b' }));
+  assert(!validate(generateLogics({
+    name: {
+      $regex: '^a([3-8])b',
+    },
+  }), { name: 'ca8b' }));
+  assert(validate(generateLogics({
+    name: {
+      $regex: ['^a([3-8])b', 'i'],
+    },
+  }), { name: 'A4b' }));
 });
