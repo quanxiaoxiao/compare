@@ -3,8 +3,9 @@ import Ajv from 'ajv';
 import _ from 'lodash';
 import ops from './ops.mjs';
 
-const compareWith = (pathNames, match) => (data) => {
-  const pathList = pathNames.split(/(?<!\\)\./).map((d) => d.replace(/\\\./g, '.'));
+const convertDataKeyToPathList = (dataKey) => dataKey.split(/(?<!\\)\./).map((d) => d.replace(/\\\./g, '.'));
+
+const compareWith = (pathList, match) => (data) => {
   const valueTarget = _.get(data, pathList);
   return match(valueTarget);
 };
@@ -51,7 +52,7 @@ const generateMatch = (dataKey, opName, valueCompare) => {
       checkValueCompareValid(dataKey, subOpName, schema, subCompareValue);
       arr.push(fn(subCompareValue));
     }
-    return compareWith(dataKey, (v) => {
+    return compareWith(convertDataKeyToPathList(dataKey), (v) => {
       if (opName === '$and') {
         return arr.every((match) => match(v));
       }
@@ -67,7 +68,7 @@ const generateMatch = (dataKey, opName, valueCompare) => {
     ops[opName].schema,
     valueCompare,
   );
-  return compareWith(dataKey, ops[opName].fn(valueCompare));
+  return compareWith(convertDataKeyToPathList(dataKey), ops[opName].fn(valueCompare));
 };
 
 export default (express) => {
@@ -84,7 +85,7 @@ export default (express) => {
       if (valueMatch != null && !['number', 'string', 'boolean'].includes(typeof valueMatch)) {
         throw new Error(`\`${dataKey}\` value match \`${JSON.stringify(valueMatch)}\` invalid`);
       }
-      result.push(compareWith(dataKey, ops.$eq.fn(valueMatch)));
+      result.push(compareWith(convertDataKeyToPathList(dataKey), ops.$eq.fn(valueMatch)));
     }
   }
   return result;
