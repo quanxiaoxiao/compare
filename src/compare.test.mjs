@@ -28,3 +28,19 @@ test('compare check express', () => {
     compare(['quan']);
   });
 });
+
+test('compare with object express', () => {
+  assert(compare({ name: 'quan' })({ name: 'quan' }));
+  assert(!compare({ name: 'quan' })({ name: 'cqq' }));
+  assert(compare({ name: { $eq: 'quan' } })({ name: 'quan' }));
+});
+
+test('compare with array express', () => {
+  assert(compare([{ name: 'quan' }])({ name: 'quan' }));
+  assert(compare([{ name: 'quan' }, { age: 33 }])({ name: 'quan' }));
+  assert(!compare([{ name: 'quan' }, { age: 33 }])({ name: 'quan2' }));
+  assert(compare([{ name: 'quan' }, { age: 33 }])({ age: 33 }));
+  assert(compare([{ name: 'quan' }, { age: { $gt: 33 } }])({ age: 34 }));
+  assert(!compare([{ name: 'quan' }, { age: { $gt: 33 } }])({ age: 33 }));
+  assert(compare([{ name: 'quan' }, { age: { $gt: 33 } }])({ age: 33, name: 'quan' }));
+});
