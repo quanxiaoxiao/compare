@@ -20,16 +20,6 @@ test('ops $eq', () => {
   assert(!ops.$eq.fn(true)('true'));
 });
 
-test('ops $eq with path', () => {
-  assert(ops.$eq.fn('$test')(null, { name: 'quan' }));
-  assert(ops.$eq.fn('$test')(null, { name: 'quan', test: null }));
-  assert(ops.$eq.fn('$name')('cqq', { name: 'cqq' }));
-  assert(ops.$eq.fn('$obj.name')('cqq', { obj: { name: 'cqq' } }));
-  assert(!ops.$eq.fn('$obj.name')('cqq', { obj: { name: 'quan' } }));
-  assert(!ops.$eq.fn('$ojb')({}, { obj: {} }));
-  assert(!ops.$eq.fn('$name')('cqq', { name: 'quan' }));
-});
-
 test('ops $ne', () => {
   assert(!ops.$ne.fn()(null));
   assert(!ops.$ne.fn(null)(null));

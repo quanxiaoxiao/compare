@@ -503,3 +503,55 @@ test('generateLogics with sub object', () => {
     },
   }));
 });
+
+test('generateLogics with ref', () => {
+  assert.throws(() => {
+    generateLogics({
+      name: [],
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: [''],
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: [324],
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: [{}],
+    });
+  });
+  assert.throws(() => {
+    generateLogics({
+      name: ['foo', '$eq1'],
+    });
+  });
+  assert(validate(generateLogics({
+    name: ['foo'],
+  }), { name: 'bbb', foo: 'bbb' }));
+  assert(!validate(generateLogics({
+    name: ['foo'],
+  }), { name: 'bbb', foo: 'bar' }));
+  assert(validate(generateLogics({
+    name: ['obj.name'],
+  }), { name: 'bbb', obj: { name: 'bbb' } }));
+  assert(!validate(generateLogics({
+    name: ['obj.name'],
+  }), { name: 'bbb', obj: { name: 'ccc' } }));
+  assert(validate(generateLogics({
+    name: ['foo', '$eq'],
+  }), { name: 'bbb', foo: 'bbb' }));
+  assert(!validate(generateLogics({
+    name: ['foo', '$eq'],
+  }), { name: 'bbb', foo: 'bbb1' }));
+  assert(validate(generateLogics({
+    name: ['foo', '$ne'],
+  }), { name: 'bbb', foo: 'bbb1' }));
+  assert(!validate(generateLogics({
+    name: ['foo', '$ne'],
+  }), { name: 'bbb', foo: 'bbb' }));
+});

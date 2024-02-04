@@ -1,16 +1,8 @@
 import assert from 'node:assert';
-import _ from 'lodash';
 
-const eq = (a) => (v, d) => {
+const eq = (a) => (v) => {
   if (a == null) {
     return v == null;
-  }
-  if (typeof a === 'string' && a[0] === '$' && a.length !== 1) {
-    const vv = _.get(d, a.slice(1));
-    if (vv == null) {
-      return v == null;
-    }
-    return v === vv;
   }
   return v === a;
 };
@@ -40,11 +32,11 @@ export default {
         { type: 'null' },
       ],
     },
-    fn: (a) => (v, d) => {
+    fn: (a) => (v) => {
       if (a == null) {
         return v != null;
       }
-      return !eq(a)(v, d);
+      return !eq(a)(v);
     },
   },
   $gt: {

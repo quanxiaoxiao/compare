@@ -81,6 +81,32 @@ export default (express) => {
     if (_.isPlainObject(valueMatch)) {
       const opName = getOpName(dataKey, valueMatch);
       result.push(generateMatch(dataKey, opName, valueMatch[opName]));
+    } else if (Array.isArray(valueMatch)) {
+      if (valueMatch.length === 0
+        || typeof valueMatch[0] !== 'string'
+        || valueMatch[0].length === 0
+      ) {
+        throw new Error();
+      }
+      const sourceValuePathList = convertDataKeyToPathList(dataKey);
+      const targetValuePathList = convertDataKeyToPathList(valueMatch[0]);
+      if (valueMatch.length === 1) {
+        result.push((data) => {
+          const valueCompare = _.get(data, sourceValuePathList);
+          const valueTarget = _.get(data, targetValuePathList);
+          return ops.$eq.fn(valueCompare)(valueTarget);
+        });
+      } else {
+        const opName = valueMatch[1];
+        if (!ops[opName]) {
+          throw new Error(`\`${dataKey}\` invalid op with \`${opName}\``);
+        }
+        result.push((data) => {
+          const valueCompare = _.get(data, sourceValuePathList);
+          const valueTarget = _.get(data, targetValuePathList);
+          return ops[opName].fn(valueCompare)(valueTarget);
+        });
+      }
     } else {
       if (valueMatch != null && !['number', 'string', 'boolean'].includes(typeof valueMatch)) {
         throw new Error(`\`${dataKey}\` value match \`${JSON.stringify(valueMatch)}\` invalid`);
