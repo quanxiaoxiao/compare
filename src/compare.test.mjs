@@ -33,6 +33,8 @@ test('compare with object express', () => {
   assert(compare({ name: 'quan' })({ name: 'quan' }));
   assert(!compare({ name: 'quan' })({ name: 'cqq' }));
   assert(compare({ name: { $eq: 'quan' } })({ name: 'quan' }));
+  assert(compare({ name: 'quan' })({ name: 'quan', age: 22 }));
+  assert(compare({ age: { $gt: 20 } })({ name: 'quan', age: 22 }));
 });
 
 test('compare with array express', () => {
