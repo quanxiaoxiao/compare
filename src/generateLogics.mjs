@@ -86,7 +86,7 @@ export default (express) => {
         || typeof valueMatch[0] !== 'string'
         || valueMatch[0].length === 0
       ) {
-        throw new Error();
+        throw new Error(`\`${dataKey}\` invalid ref \`${JSON.stringify(valueMatch)}\``);
       }
       const sourceValuePathList = convertDataKeyToPathList(dataKey);
       const targetValuePathList = convertDataKeyToPathList(valueMatch[0]);

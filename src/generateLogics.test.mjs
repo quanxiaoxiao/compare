@@ -24,7 +24,6 @@ test('generateLogics check express', () => {
   assert.equal(generateLogics({ name: true }).length, 1);
   assert.equal(generateLogics({ name: false }).length, 1);
   assert.equal(generateLogics({ name: 33 }).length, 1);
-  // assert.equal(generateLogics({ name: /^qu(a|b)$/ }).length, 1);
 });
 
 test('generateLogics with invalid object', () => {
