@@ -1,9 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import _ from 'lodash';
 import generateLogics from './generateLogics.mjs';
 
-const validate = (every, obj) => every.every((d) => d.match(_.get(obj, d.dataKey)));
+const validate = (arr, obj) => arr.every((match) => match(obj));
 
 test('generateLogics check express', () => {
   assert.throws(() => {
@@ -426,4 +425,81 @@ test('generateLogics with object $nor', () => {
       ],
     },
   }), { age: 25 }));
+});
+
+test('generateLogics with sub object', () => {
+  assert(validate(generateLogics({
+    'obj.name': 'quan',
+  }), {
+    obj: {
+      name: 'quan',
+    },
+  }));
+  assert(validate(generateLogics({
+    'obj.name': {
+      $eq: 'quan',
+    },
+  }), {
+    obj: {
+      name: 'quan',
+    },
+  }));
+  assert(!validate(generateLogics({
+    'obj.name': {
+      $eq: 'quan1',
+    },
+  }), {
+    obj: {
+      name: 'quan',
+    },
+  }));
+  assert(validate(generateLogics({
+    'obj\\.name': 'quan',
+  }), {
+    'obj.name': 'quan',
+  }));
+  assert(validate(generateLogics({
+    'obj\\.name': {
+      $eq: 'quan',
+    },
+  }), {
+    'obj.name': 'quan',
+  }));
+  assert(validate(generateLogics({
+    'obj\\.name': {
+      $ne: 'quan1',
+    },
+  }), {
+    'obj.name': 'quan',
+  }));
+  assert(!validate(generateLogics({
+    'obj\\.name': {
+      $eq: 'quan1',
+    },
+  }), {
+    'obj.name': 'quan',
+  }));
+  assert(validate(generateLogics({
+    'obj.foo\\.name': {
+      $eq: 'quan',
+    },
+  }), {
+    obj: {
+      'foo.name': 'quan',
+    },
+  }));
+  assert(validate(generateLogics({
+    'obj.foo\\.name': 'quan',
+  }), {
+    obj: {
+      'foo.name': 'quan',
+    },
+  }));
+  assert(!validate(generateLogics({
+    'obj.foo\\.name': 'quan',
+  }), {
+    obj: {
+      'foo.name': 'cqq',
+    },
+  }));
 });

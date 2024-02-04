@@ -3,6 +3,12 @@ import Ajv from 'ajv';
 import _ from 'lodash';
 import ops from './ops.mjs';
 
+const compareWith = (pathNames, match) => (data) => {
+  const pathList = pathNames.split(/(?<!\\)\./).map((d) => d.replace(/\\\./g, '.'));
+  const valueTarget = _.get(data, pathList);
+  return match(valueTarget);
+};
+
 const getOpName = (dataKey, express) => {
   const opNames = Object.keys(express);
   if (opNames.length !== 1) {
@@ -45,25 +51,23 @@ const generateMatch = (dataKey, opName, valueCompare) => {
       checkValueCompareValid(dataKey, subOpName, schema, subCompareValue);
       arr.push(fn(subCompareValue));
     }
-    return {
-      dataKey,
-      match: (v) => {
-        if (opName === '$and') {
-          return arr.every((match) => match(v));
-        }
-        if (opName === '$or') {
-          return arr.some((match) => match(v));
-        }
-        return !arr.some((match) => match(v));
-      },
-    };
+    return compareWith(dataKey, (v) => {
+      if (opName === '$and') {
+        return arr.every((match) => match(v));
+      }
+      if (opName === '$or') {
+        return arr.some((match) => match(v));
+      }
+      return !arr.some((match) => match(v));
+    });
   }
-  const { schema, fn } = ops[opName];
-  checkValueCompareValid(dataKey, opName, schema, valueCompare);
-  return {
+  checkValueCompareValid(
     dataKey,
-    match: fn(valueCompare),
-  };
+    opName,
+    ops[opName].schema,
+    valueCompare,
+  );
+  return compareWith(dataKey, ops[opName].fn(valueCompare));
 };
 
 export default (express) => {
@@ -80,10 +84,7 @@ export default (express) => {
       if (valueMatch != null && !['number', 'string', 'boolean'].includes(typeof valueMatch)) {
         throw new Error(`\`${dataKey}\` value match \`${JSON.stringify(valueMatch)}\` invalid`);
       }
-      result.push({
-        dataKey,
-        match: ops.$eq.fn(valueMatch),
-      });
+      result.push(compareWith(dataKey, ops.$eq.fn(valueMatch)));
     }
   }
   return result;
