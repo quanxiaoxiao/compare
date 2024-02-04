@@ -3,6 +3,8 @@ import Ajv from 'ajv';
 import _ from 'lodash';
 import ops from './ops.mjs';
 
+const isBooleanOperator = (opName) => ['$or', '$and', '$nor', '$not'].includes(opName);
+
 const convertDataKeyToPathList = (dataKey) => dataKey.split(/(?<!\\)\./).map((d) => d.replace(/\\\./g, '.'));
 
 const compareWith = (pathList, match) => (data) => {
@@ -16,7 +18,7 @@ const getOpName = (dataKey, express) => {
     throw new Error(`\`${dataKey}\` invalid op express, \`${JSON.stringify(express)}\``);
   }
   const opName = opNames[0];
-  if (opName === '$or' || opName === '$and' || opName === '$nor') {
+  if (isBooleanOperator(opName)) {
     return opName;
   }
   if (!ops[opName]) {
@@ -33,7 +35,7 @@ const checkValueCompareValid = (dataKey, opName, schema, valueCompare) => {
 };
 
 const generateMatch = (dataKey, opName, valueCompare) => {
-  if (opName === '$or' || opName === '$and' || opName === '$nor') {
+  if (isBooleanOperator(opName)) {
     if (!Array.isArray(valueCompare)) {
       throw new Error(`\`${dataKey}\` \`${opName}\` compare value is not array`);
     }
@@ -44,7 +46,7 @@ const generateMatch = (dataKey, opName, valueCompare) => {
     for (let i = 0; i < valueCompare.length; i++) {
       const express = valueCompare[i];
       const subOpName = getOpName(dataKey, express);
-      if (['$or', '$and', '$nor'].includes(subOpName)) {
+      if (isBooleanOperator(subOpName)) {
         throw new Error(`\`${dataKey}\` \`${opName}\` sub op invalid`);
       }
       const subCompareValue = express[subOpName];
@@ -55,6 +57,9 @@ const generateMatch = (dataKey, opName, valueCompare) => {
     return compareWith(convertDataKeyToPathList(dataKey), (v) => {
       if (opName === '$and') {
         return arr.every((match) => match(v));
+      }
+      if (opName === '$not') {
+        return !arr.every((match) => match(v));
       }
       if (opName === '$or') {
         return arr.some((match) => match(v));

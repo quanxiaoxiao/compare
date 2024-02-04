@@ -554,3 +554,42 @@ test('generateLogics with ref', () => {
     name: ['foo', '$ne'],
   }), { name: 'bbb', foo: 'bbb' }));
 });
+
+test('generateLogics with object $not', () => {
+  assert(validate(generateLogics({
+    age: {
+      $not: [
+        {
+          $ne: 33,
+        },
+        {
+          $gt: 27,
+        },
+      ],
+    },
+  }), { age: 25 }));
+  assert(!validate(generateLogics({
+    age: {
+      $not: [
+        {
+          $ne: 33,
+        },
+        {
+          $gt: 27,
+        },
+      ],
+    },
+  }), { age: 28 }));
+  assert(validate(generateLogics({
+    age: {
+      $not: [
+        {
+          $ne: 33,
+        },
+        {
+          $gt: 27,
+        },
+      ],
+    },
+  }), { age: 33 }));
+});
