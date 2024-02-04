@@ -18,6 +18,13 @@ const getOpName = (dataKey, express) => {
   return opName;
 };
 
+const checkValueCompareValid = (dataKey, opName, schema, valueCompare) => {
+  const validate = new Ajv().compile(schema);
+  if (!validate(valueCompare)) {
+    throw new Error(`\`${dataKey}\` \`${opName}\` compare value \`${JSON.stringify(valueCompare)}\` invalid, \`${JSON.stringify(validate.errors)}\``);
+  }
+};
+
 const generateMatch = (dataKey, opName, valueCompare) => {
   if (opName === '$or' || opName === '$and' || opName === '$nor') {
     if (!Array.isArray(valueCompare)) {
@@ -35,10 +42,7 @@ const generateMatch = (dataKey, opName, valueCompare) => {
       }
       const subCompareValue = express[subOpName];
       const { schema, fn } = ops[subOpName];
-      const validateCompareValue = new Ajv().compile(schema);
-      if (!validateCompareValue(subCompareValue)) {
-        throw new Error(`\`${dataKey}\` \`${subOpName}\` compare value \`${JSON.stringify(subCompareValue)}\` invalid, \`${JSON.stringify(validateCompareValue.errors)}\``);
-      }
+      checkValueCompareValid(dataKey, subOpName, schema, subCompareValue);
       arr.push(fn(subCompareValue));
     }
     return {
@@ -55,10 +59,7 @@ const generateMatch = (dataKey, opName, valueCompare) => {
     };
   }
   const { schema, fn } = ops[opName];
-  const validateCompareValue = new Ajv().compile(schema);
-  if (!validateCompareValue(valueCompare)) {
-    throw new Error(`\`${dataKey}\`  compare value \`${JSON.stringify(valueCompare)}\` invalid, \`${JSON.stringify(validateCompareValue.errors)}\``);
-  }
+  checkValueCompareValid(dataKey, opName, schema, valueCompare);
   return {
     dataKey,
     match: fn(valueCompare),

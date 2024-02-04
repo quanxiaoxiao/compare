@@ -343,3 +343,87 @@ test('generateLogics with object $or', () => {
     },
   }), { age: 25 }));
 });
+
+test('generateLogics with object $and', () => {
+  assert(!validate(generateLogics({
+    age: {
+      $and: [
+        {
+          $ne: 33,
+        },
+        {
+          $gt: 27,
+        },
+      ],
+    },
+  }), { age: 25 }));
+  assert(validate(generateLogics({
+    age: {
+      $and: [
+        {
+          $ne: 33,
+        },
+        {
+          $gt: 27,
+        },
+      ],
+    },
+  }), { age: 28 }));
+  assert(!validate(generateLogics({
+    age: {
+      $and: [
+        {
+          $ne: 33,
+        },
+        {
+          $gt: 27,
+        },
+      ],
+    },
+  }), { age: 33 }));
+});
+
+test('generateLogics with object $nor', () => {
+  assert(!validate(generateLogics({
+    age: {
+      $nor: [
+        {
+          $eq: 33,
+        },
+      ],
+    },
+  }), { age: 33 }));
+  assert(validate(generateLogics({
+    age: {
+      $nor: [
+        {
+          $eq: 32,
+        },
+      ],
+    },
+  }), { age: 33 }));
+  assert(!validate(generateLogics({
+    age: {
+      $nor: [
+        {
+          $eq: 33,
+        },
+        {
+          $gt: 28,
+        },
+      ],
+    },
+  }), { age: 29 }));
+  assert(validate(generateLogics({
+    age: {
+      $nor: [
+        {
+          $eq: 33,
+        },
+        {
+          $gt: 27,
+        },
+      ],
+    },
+  }), { age: 25 }));
+});
