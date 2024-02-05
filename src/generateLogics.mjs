@@ -59,7 +59,7 @@ const generateMatch = (dataKey, opName, valueCompare) => {
         return arr.every((match) => match(v));
       }
       if (opName === '$not') {
-        return !arr.every((match) => match(v));
+        return arr.every((match) => !match(v));
       }
       if (opName === '$or') {
         return arr.some((match) => match(v));

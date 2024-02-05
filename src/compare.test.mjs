@@ -114,3 +114,328 @@ test('compare with array express', () => {
   assert(!compare([{ name: 'quan' }, { age: { $gt: 33 } }])({ age: 33 }));
   assert(compare([{ name: 'quan' }, { age: { $gt: 33 } }])({ age: 33, name: 'quan' }));
 });
+
+test('compare $not', () => {
+  assert(compare({
+    age: {
+      $not: [
+        {
+          $eq: 33,
+        },
+        {
+          $eq: 44,
+        },
+      ],
+    },
+  })({ age: 34 }));
+  assert(!compare({
+    age: {
+      $not: [
+        {
+          $eq: 33,
+        },
+        {
+          $eq: 44,
+        },
+      ],
+    },
+  })({ age: 33 }));
+  assert(compare({
+    age: {
+      $not: [
+        {
+          $lt: 33,
+        },
+      ],
+    },
+  })({ age: 34 }));
+  assert(compare({
+    age: {
+      $not: [
+        {
+          $lt: 33,
+        },
+        {
+          $gt: 44,
+        },
+      ],
+    },
+  })({ age: 34 }));
+  assert(!compare({
+    age: {
+      $not: [
+        {
+          $lt: 33,
+        },
+        {
+          $gt: 44,
+        },
+      ],
+    },
+  })({ age: 32 }));
+  assert(!compare({
+    age: {
+      $not: [
+        {
+          $lt: 33,
+        },
+        {
+          $gt: 44,
+        },
+      ],
+    },
+  })({ age: 45 }));
+});
+
+test('compare $and', () => {
+  assert(compare({
+    age: {
+      $and: [
+        {
+          $gt: 33,
+        },
+        {
+          $lt: 44,
+        },
+      ],
+    },
+  })({ age: 34 }));
+  assert(!compare({
+    age: {
+      $and: [
+        {
+          $gt: 33,
+        },
+        {
+          $lt: 44,
+        },
+      ],
+    },
+  })({ age: 33 }));
+  assert(!compare({
+    age: {
+      $and: [
+        {
+          $gt: 33,
+        },
+        {
+          $lt: 44,
+        },
+      ],
+    },
+  })({ age: 32 }));
+  assert(!compare({
+    age: {
+      $and: [
+        {
+          $gt: 33,
+        },
+        {
+          $lt: 44,
+        },
+      ],
+    },
+  })({ age: 44 }));
+});
+
+test('compare $or', () => {
+  assert(compare({
+    age: {
+      $or: [
+        {
+          $lt: 33,
+        },
+        {
+          $gt: 44,
+        },
+      ],
+    },
+  })({ age: 45 }));
+  assert(compare({
+    age: {
+      $or: [
+        {
+          $lt: 33,
+        },
+        {
+          $gt: 44,
+        },
+      ],
+    },
+  })({ age: 32 }));
+  assert(!compare({
+    age: {
+      $or: [
+        {
+          $lt: 33,
+        },
+        {
+          $gt: 44,
+        },
+      ],
+    },
+  })({ age: 33 }));
+  assert(!compare({
+    age: {
+      $or: [
+        {
+          $lt: 33,
+        },
+        {
+          $gt: 44,
+        },
+      ],
+    },
+  })({ age: 34 }));
+});
+
+test('compare $nor', () => {
+  assert(compare({
+    age: {
+      $nor: [
+        {
+          $lt: 33,
+        },
+        {
+          $gt: 44,
+        },
+      ],
+    },
+  })({ age: 34 }));
+  assert(compare({
+    age: {
+      $nor: [
+        {
+          $eq: 33,
+        },
+        {
+          $eq: 44,
+        },
+      ],
+    },
+  })({ age: 34 }));
+  assert(compare({
+    age: {
+      $nor: [
+        {
+          $lt: 33,
+        },
+        {
+          $gt: 44,
+        },
+      ],
+    },
+  })({ age: 34 }));
+  assert(!compare({
+    age: {
+      $nor: [
+        {
+          $lt: 33,
+        },
+        {
+          $gt: 44,
+        },
+      ],
+    },
+  })({ age: 32 }));
+});
+
+test('compare []', () => {
+  assert(compare([
+    {
+      name: {
+        $eq: 'quan',
+      },
+    },
+    {
+      age: {
+        $gt: 30,
+      },
+    },
+  ])({
+    name: 'quan',
+    age: 33,
+  }));
+  assert(compare([
+    {
+      name: {
+        $eq: 'quan',
+      },
+    },
+    {
+      age: {
+        $gt: 30,
+      },
+    },
+  ])({
+    name: 'rice',
+    age: 33,
+  }));
+  assert(!compare([
+    {
+      name: {
+        $eq: 'quan',
+      },
+    },
+    {
+      age: {
+        $gt: 30,
+      },
+    },
+  ])({
+    name: 'rice',
+    age: 29,
+  }));
+  assert(!compare([
+    {
+      name: {
+        $eq: 'quan',
+      },
+    },
+    {
+      age: {
+        $gt: 30,
+      },
+    },
+  ])({
+    name: 'rice',
+  }));
+  assert(compare([
+    {
+      name: {
+        $eq: 'quan',
+      },
+    },
+    {
+      age: {
+        $gt: 30,
+      },
+    },
+  ])({
+    name: 'quan',
+  }));
+  assert(compare([
+    {
+      name: 'quan',
+    },
+    {
+      age: {
+        $gt: 30,
+      },
+    },
+  ])({
+    name: 'quan',
+  }));
+  assert(!compare([
+    {
+      name: 'quan',
+    },
+    {
+      age: {
+        $gt: 30,
+      },
+    },
+  ])({
+    name: 'rice',
+  }));
+});

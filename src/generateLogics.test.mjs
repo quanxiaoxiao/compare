@@ -560,10 +560,10 @@ test('generateLogics with object $not', () => {
     age: {
       $not: [
         {
-          $ne: 33,
+          $eq: 33,
         },
         {
-          $gt: 27,
+          $eq: 27,
         },
       ],
     },
@@ -572,24 +572,24 @@ test('generateLogics with object $not', () => {
     age: {
       $not: [
         {
-          $ne: 33,
+          $eq: 33,
         },
         {
-          $gt: 27,
+          $eq: 27,
         },
       ],
     },
-  }), { age: 28 }));
+  }), { age: 27 }));
   assert(validate(generateLogics({
     age: {
       $not: [
         {
-          $ne: 33,
+          $eq: 33,
         },
         {
-          $gt: 27,
+          $eq: 27,
         },
       ],
     },
-  }), { age: 33 }));
+  }), { age: 88 }));
 });
