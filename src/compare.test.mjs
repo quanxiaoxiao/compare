@@ -439,3 +439,85 @@ test('compare []', () => {
     name: 'rice',
   }));
 });
+
+test('compare', () => {
+  const express = {
+    method: 'GET',
+    'headers.host': {
+      $or: [
+        {
+          $regex: '\\baaa\\.com\\b',
+        },
+        {
+          $regex: '\\bccc\\.net\\b',
+        },
+      ],
+    },
+  };
+  assert(compare(express)({
+    method: 'GET',
+    headers: {
+      host: 'www.aaa.com',
+    },
+  }));
+  assert(!compare(express)({
+    method: 'POST',
+    headers: {
+      host: 'www.aaa.com',
+    },
+  }));
+  assert(!compare(express)({
+    method: 'GET',
+    headers: {
+      host: 'www.aaa.net',
+    },
+  }));
+  assert(compare(express)({
+    method: 'GET',
+    headers: {
+      host: 'www.ccc.net',
+    },
+  }));
+});
+
+test('compare ref', () => {
+  assert(compare({
+    'obj1.age': ['obj2.age', '$gt'],
+  })({
+    obj1: {
+      age: 22,
+    },
+    obj2: {
+      age: 33,
+    },
+  }));
+  assert(!compare({
+    'obj1.age': ['obj2.age', '$gt'],
+  })({
+    obj1: {
+      age: 22,
+    },
+    obj2: {
+      age: 21,
+    },
+  }));
+  assert(!compare({
+    'obj1.age': ['obj2.age', '$gt'],
+  })({
+    obj1: {
+      age: 22,
+    },
+    obj2: {
+      age: 22,
+    },
+  }));
+  assert(!compare({
+    'obj1.age': ['obj2.age', '$gt'],
+  })({
+    obj1: {
+      age: 22,
+    },
+    obj2: {
+    },
+  }));
+});

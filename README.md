@@ -18,6 +18,11 @@ compare({ big: null })({ name: 'quan', age: 22, good: false }) === true
 compare({ 'obj.name': 'quan' })({ obj: { name: 'quan' } }) === true
 ```
 
+## Expression Type
+
+- Object
+- Array<Object>
+
 ## Expression Operators
 
 ### Number Comparison Expression Operators
@@ -100,16 +105,13 @@ compare({ name: { $nin: ['', null] } })({ age: 22, name: 'aaa' }) === true
 | ------ | ------------------------- |
 | $regex | `string`, Array<`string`> |
 
-
 ### $regex
-
 
 ```javascript
 compare({ name: { $regex: '^a(1|3|z)c' } })({ name: 'a3c' }) === true
 compare({ name: { $regex: '^a(1|3|z)c' } })({ name: 'azc' }) === true
-compare({ name: { $regex: ['^a(1|3|z)c', 'i'] } })({ name: 'Azc' })
+compare({ name: { $regex: ['^a(1|3|z)c', 'i'] } })({ name: 'Azc' }) === true
 ```
-
 
 ### Boolean Expression Operators
 
@@ -120,4 +122,90 @@ compare({ name: { $regex: ['^a(1|3|z)c', 'i'] } })({ name: 'Azc' })
 | $or  | Array<`Number comparison Expression`, `Eegexp Expression`, `Array Expression`> |
 | $nor | Array<`Number comparison Expression`, `Eegexp Expression`, `Array Expression`> |
 
+### $not
+
+```javascript
+express = {
+  $not: [
+     { $eq: 33 },
+     { $eq: 44 },
+  ]
+}; // age !== 33 && age !== 44
+
+compare(express)({ age: 34 }) === true
+```
+
+```javascript
+express = {
+  $not: [
+     { $lt: 33 },
+     { $gt: 44 },
+  ]
+};  // !(age < 33) && !(age > 44)
+
+compare(express)({ age: 34 }) === true
+```
+
+### $and
+
+```javascript
+express = {
+  $and: [
+     { $gt: 33 },
+     { $lt: 44 },
+  ]
+};  // age > 33 && age < 44
+
+compare(express)({ age: 34 }) === true
+```
+
+### $or
+
+```javascript
+express = {
+  $or: [
+     { $lt: 33 },
+     { $gt: 44 },
+  ]
+}; // age < 33 || age > 44
+
+compare(express)({ age: 32 }) === true
+compare(express)({ age: 45 }) === true 
+```
+
 ## Other
+
+```javascript
+const express = [
+  { name: 'quan' },
+  { age: { $gt: 22 } },
+]; // name === 'quan' || age > 22
+
+compare(express)({ age: 32 }) === true
+compare(express)({ name: 'quan' }) === true
+```
+
+```javascript
+const express = {
+  method: 'GET',
+  'headers.host': {
+    $or: [
+      {
+        $regex: '\\baaa\\.com\\b',
+      },
+      {
+        $regex: '\\bccc\\.net\\b',
+      },
+    ],
+  },
+};
+
+compare(express)({ method: 'GET', headers: { host: 'www.aaa.com' } }) === true
+```
+
+```javascript
+compare({ 'obj1.age': ['obj2.age', '$gt'] })({
+  obj1: { age: 22 },
+  obj2: { age: 33 },
+}) === true  // obj2.age > obj1.age
+```
