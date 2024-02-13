@@ -1,4 +1,3 @@
-import assert from 'node:assert';
 import Ajv from 'ajv';
 import _ from 'lodash';
 import ops from './ops.mjs';
@@ -77,7 +76,9 @@ const generateMatch = (dataKey, opName, valueCompare) => {
 };
 
 export default (express) => {
-  assert(_.isPlainObject(express));
+  if (!_.isPlainObject(express)) {
+    throw new Error('express invalid');
+  }
   const result = [];
   const dataKeys = Object.keys(express);
   for (let i = 0; i < dataKeys.length; i++) {

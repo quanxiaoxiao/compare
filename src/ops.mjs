@@ -1,5 +1,3 @@
-import assert from 'node:assert';
-
 const eq = (a) => (v) => {
   if (a == null) {
     return v == null;
@@ -113,7 +111,9 @@ export default {
       if (v == null) {
         return a.includes(null);
       }
-      assert(['string', 'number', 'boolean'].includes(typeof v));
+      if (!['string', 'number', 'boolean'].includes(typeof v)) {
+        throw new Error(`\`${v}\` invalid data type`);
+      }
       return a.includes(v);
     },
   },
@@ -143,7 +143,9 @@ export default {
       if (v == null) {
         return !a.includes(null);
       }
-      assert(['string', 'number', 'boolean'].includes(typeof v));
+      if (!['string', 'number', 'boolean'].includes(typeof v)) {
+        throw new Error(`\`${v}\` invalid data type`);
+      }
       return !a.includes(v);
     },
   },
@@ -164,14 +166,18 @@ export default {
         const [pattern, flags] = a;
         regexp = new RegExp(pattern, flags || '');
       } else {
-        assert(a !== '');
+        if (a === '') {
+          throw new Error('$regexp express is empty');
+        }
         regexp = new RegExp(a);
       }
       return (v) => {
         if (v == null) {
           return false;
         }
-        assert(typeof v === 'string');
+        if (typeof v !== 'string') {
+          throw new Error('$regex input invalid');
+        }
         return regexp.test(v);
       };
     },
