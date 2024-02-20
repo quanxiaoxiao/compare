@@ -287,6 +287,30 @@ test('compare $or', () => {
       ],
     },
   })({ age: 34 }));
+  assert(compare({
+    age: {
+      $or: [
+        {
+          $eq: 33,
+        },
+        {
+          $eq: 44,
+        },
+      ],
+    },
+  })({ age: 33 }));
+  assert(!compare({
+    age: {
+      $or: [
+        {
+          $eq: 33,
+        },
+        {
+          $eq: 44,
+        },
+      ],
+    },
+  })({ age: 34 }));
 });
 
 test('compare $nor', () => {
