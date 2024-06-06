@@ -545,3 +545,61 @@ test('compare ref', () => {
     },
   }));
 });
+
+test('compare', () => {
+  assert(compare({
+    name: {
+      $not: [
+        {
+          $eq: '',
+        },
+        {
+          $eq: null,
+        },
+      ],
+    },
+  })({ name: ' ' }));
+  assert(!compare({
+    name: {
+      $not: [
+        {
+          $eq: '',
+        },
+        {
+          $eq: null,
+        },
+      ],
+    },
+  })({ name: '' }));
+
+  assert(!compare({
+    name: {
+      $not: [
+        {
+          $eq: '',
+        },
+        {
+          $eq: null,
+        },
+        {
+          $regex: '^\\s+$',
+        },
+      ],
+    },
+  })({ name: '  ' }));
+  assert(compare({
+    name: {
+      $not: [
+        {
+          $eq: '',
+        },
+        {
+          $eq: null,
+        },
+        {
+          $regex: '^\\s+$',
+        },
+      ],
+    },
+  })({ name: '  111  ' }));
+});
