@@ -1,5 +1,6 @@
-import test from 'node:test';
 import assert from 'node:assert';
+import test from 'node:test';
+
 import generateLogics from './generateLogics.mjs';
 
 const validate = (arr, obj) => arr.every((match) => match(obj));

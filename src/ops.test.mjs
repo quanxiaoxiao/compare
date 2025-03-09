@@ -1,5 +1,6 @@
-import test from 'node:test';
 import assert from 'node:assert';
+import test from 'node:test';
+
 import ops from './ops.mjs';
 
 test('ops $eq', () => {
@@ -82,10 +83,10 @@ test('ops $lte', () => {
 
 test('ops $in valid input', () => {
   assert.throws(() => {
-    ops.$in.fn([])(new String('aa')); // eslint-disable-line
+    ops.$in.fn([])(new String('aa'));
   });
   assert.throws(() => {
-    ops.$in.fn([])(new Number(10)); // eslint-disable-line
+    ops.$in.fn([])(new Number(10));
   });
   assert.throws(() => {
     ops.$in.fn([])(() => {});
@@ -140,7 +141,7 @@ test('ops $regex', () => {
     ops.$regex.fn('aaa')(true);
   });
   assert.throws(() => {
-    ops.$regex.fn('aaa')(new RegExp('bbb')); // eslint-disable-line
+    ops.$regex.fn('aaa')(new RegExp('bbb'));
   });
   assert.throws(() => {
     ops.$regex.fn('aaa')(/asdfw/);

@@ -1,4 +1,5 @@
 import _ from 'lodash';
+
 import generateLogics from './generateLogics.mjs';
 
 const validate = (arr, obj) => arr.every((match) => match(obj));

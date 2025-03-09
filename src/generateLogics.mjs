@@ -1,5 +1,6 @@
 import Ajv from 'ajv';
 import _ from 'lodash';
+
 import ops from './ops.mjs';
 
 const isBooleanOperator = (opName) => ['$or', '$and', '$nor', '$not'].includes(opName);
